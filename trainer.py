@@ -1,5 +1,4 @@
 import utils
-import models
 import torch
 import torch.nn as nn
 import numpy as np
@@ -153,7 +152,7 @@ def model_test(args):
     model_module = getattr(import_module("models"), args.model)
     model = model_module(num_classes=11)
 
-    input = torch.randn([1, 3, 512, 512])
+    input = torch.randn([8, 3, 512, 512])
     print("input shape:", input.shape)
     output = model(input).to(device)
     print("output shape: ", output.shape)
