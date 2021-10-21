@@ -8,6 +8,7 @@ from .Unet_Efficient_b5 import *
 from .UPlusPlus_Efficient_b4 import *
 from .DeepLabV3Plus_Efficient_b4 import *
 from .DeepLabV3Plus_Xception import *
+from .DeepLabV3Plus_ResNet50 import *
 from .DeepLabV3Plus_ResNet101 import *
 from .UPlusPlus_ResNet101 import *
 from .FPN_Rex50 import *
