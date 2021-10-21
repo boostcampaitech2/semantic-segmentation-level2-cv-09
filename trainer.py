@@ -31,11 +31,13 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
     num_classes = train_dataset.num_classes
 
     # -- augmentation
-    transform_module = getattr(import_module("dataset"), args.augmentation) # dafualt: BaseAugmentation
+    transform_module = getattr(import_module("dataset"), args.train_augmentation) # dafualt: BaseAugmentation
     transform = transform_module()
     train_dataset.set_transform(transform)
     if args.val:
-        val_dataset.set_transform(transform)
+        val_transform_module = getattr(import_module("dataset"), args.val_augmentation)
+        val_transform = val_transform_module()
+        val_dataset.set_transform(val_transform)
 
     # -- data loader
     train_loader = torch.utils.data.DataLoader(
@@ -144,7 +146,7 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
                 best_val_loss = avrg_loss
                 utils.save_model(model, save_dir, "best.pth")
 
-            utils.save_model(model, save_dir, "last.pth")
+            utils.save_model(model, save_dir, f"epoch{step}.pth")
 
 def model_test(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

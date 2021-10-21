@@ -11,6 +11,5 @@ class DeepLabV3Plus_ResNet50(nn.Module):
         self.model.classifier = DeepLabHead(2048, num_classes)
     
     def forward(self, x):
-        print(self.model)
         return self.model(x)['out']
 

@@ -46,7 +46,7 @@ class BaseDataset(Dataset):
                 class_name = self.get_class_name(anns[i]['category_id'], self.cats)
                 pixel_value = self.category_names.index(class_name)
                 masks[self.coco.annToMask(anns[i]) == 1] = pixel_value
-            masks = masks.astype(np.int8)
+            masks = masks.astype(np.uint8)
 
             if self.transform is not None:
                 transformed = self.transform(image=images, mask=masks)
@@ -89,4 +89,23 @@ class BaseAugmentation:
         ])
     def __call__(self, image, mask):
         return self.transform(image=image, mask=mask)
-# print(base.__getitem__(0))
+
+class CustomTrainAugmentation:
+    def __init__(self):
+        self.transform = A.Compose([
+            A.HorizontalFlip(p=0.5),
+            A.VerticalFlip(p=0.5),
+            A.ShiftScaleRotate(scale_limit=0.5, rotate_limit=0, shift_limit=0.1, p=1, border_mode=0),
+            A.Perspective(p=0.5),
+            A.ToGray(always_apply=False, p=0.2),
+            A.OneOf(
+                [
+                    A.RandomBrightness(p=1.0),
+                    A.RandomGamma(p=1.0),
+                ],
+                p=0.5,
+            ),
+            ToTensorV2(),
+        ])
+    def __call__(self, image, mask):
+        return self.transform(image=image, mask=mask)
