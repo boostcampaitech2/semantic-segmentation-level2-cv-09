@@ -20,14 +20,14 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
     train_dataset_module = getattr(import_module("dataset"), args.dataset) # default: BaseDataset
     train_dataset = train_dataset_module(
         data_dir = data_dir,
-        ann_file = "train.json",
+        ann_file = args.train_json,
         train = True
     )
     if args.val:
         val_dataset_module = getattr(import_module("dataset"), args.dataset) # default: BaseDataset
         val_dataset = val_dataset_module(
             data_dir = data_dir,
-            ann_file = "val.json",
+            ann_file = args.val_json,
             train = True
         )
     num_classes = train_dataset.num_classes

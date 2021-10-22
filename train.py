@@ -9,6 +9,8 @@ if __name__ == '__main__':
     parser.add_argument('--model', type=str, default='FCN32s', help='architecture (default: FCN32s)')
     parser.add_argument('--epochs', type=int, default=1, help='number of epochs to train (default: 1)')
     parser.add_argument('--dataset', type=str, default='BaseDataset', help='dataset type (default: BaseDataset)')
+    parser.add_argument('--val_json', type=str, default='val.json', help='default: val.json')
+    parser.add_argument('--train_json', type=str, default='train_json', help='default: train.json')
     parser.add_argument('--train_augmentation', type=str, default='BaseAugmentation', help='data augmentation type (default: BaseAugmentation)')
     parser.add_argument('--val_augmentation', type=str, default='BaseAugmentation', help='data augmentation type (default: BaseAugmentation)')
     parser.add_argument('--num_workers', type=int, default=4, help='worker size for dataloader (default: 4)')
