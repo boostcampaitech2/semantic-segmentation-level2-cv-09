@@ -20,14 +20,14 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
     train_dataset_module = getattr(import_module("dataset"), args.dataset) # default: BaseDataset
     train_dataset = train_dataset_module(
         data_dir = data_dir,
-        ann_file = args.train_json,
+        ann_file = "train.json",
         train = True
     )
     if args.val:
         val_dataset_module = getattr(import_module("dataset"), args.dataset) # default: BaseDataset
         val_dataset = val_dataset_module(
             data_dir = data_dir,
-            ann_file = args.val_json,
+            ann_file = "val.json",
             train = True
         )
     num_classes = train_dataset.num_classes
@@ -107,7 +107,7 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
             hist = utils.add_hist(hist, masks, outputs, num_classes)
             acc, acc_cls, mIoU, fwavacc, IoU = utils.label_accuracy_score(hist)
             current_lr = utils.get_lr(optimizer)
-            
+
             if (step + 1) % args.log_interval == 0:
                 msg = f'Epoch [{epoch+1}/{args.epochs}], Step [{step+1}/{len(train_loader)}], \
                         Loss: {round(loss.item(),4)}, mIoU: {round(mIoU,4)} lr {current_lr}'
