@@ -16,6 +16,7 @@ if __name__ == '__main__':
     parser.add_argument('--log_interval', type=int, default=20, help='how many batches to wait before logging training status')
     parser.add_argument('--val_every', type=int, default=1, help='validation term (default: 1)')
     parser.add_argument('--name', default='exp', help='model save at {SM_MODEL_DIR}/{name}')
+    parser.add_argument('--save_every', default=True, action='store_true', help='save mode (default: True)')
     parser.add_argument('--val', default=True, action='store_true', help='using val set for validation (default: True)')
     parser.add_argument('--model_test', default=False, action='store_true', help='model test mode(True) (default: False)')
     

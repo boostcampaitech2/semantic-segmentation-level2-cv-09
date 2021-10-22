@@ -9,6 +9,7 @@ import os
 from matplotlib.patches import Patch
 import webcolors
 import matplotlib.pyplot as plt
+import json
 
 def increment_path(path, exist_ok=False):
     """ Automatically increment path, i.e. runs/exp --> runs/exp0, runs/exp1 etc.
@@ -45,12 +46,31 @@ def save_model(model, save_dir, file_name):
 def collate_fn(batch):
     return tuple(zip(*batch))
 
+def get_lr(optimizer):
+    """ Returns learning rate initialized at optimizer
+    Args: 
+        opimizer: The optimizer included with nn.optim
+    """
+    for param_group in optimizer.param_groups:
+        return param_group['lr']
+        
 # Metric Function
 def _fast_hist(label_true, label_pred, n_class):
     mask = (label_true >= 0) & (label_true < n_class)
     hist = np.bincount(n_class * label_true[mask].astype(int) + label_pred[mask],
                         minlength=n_class ** 2).reshape(n_class, n_class)
     return hist
+
+def write_json(dir, log_file, data):
+    if os.path.isdir(dir) == False:
+        os.mkdir(dir)
+
+    with open(os.path.join(dir, log_file), 'a', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=1)
+
+def logging(dir, log_file, data):
+    with open(os.path.join(dir, log_file), "a") as f:
+        f.write(data + "\n")
 
 def label_accuracy_score(hist):
     """

@@ -1,8 +1,10 @@
+from torch.optim.lr_scheduler import CosineAnnealingLR
 import utils
 import torch
 import torch.nn as nn
 import numpy as np
 import os
+import json
 import segmentation_models_pytorch as smp
 from importlib import import_module
 
@@ -62,10 +64,11 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
     # -- loss & metric
     # criterion = nn.CrossEntropyLoss()
     criterion = smp.losses.FocalLoss(mode="multiclass")
-    optimizer = torch.optim.Adam(model.parameters(), lr = 1e-4)
-    
-    # -- logging
+    optimizer = torch.optim.SGD(model.parameters(), lr = 1e-2)
+    scheduler = CosineAnnealingLR(optimizer, T_max=20, eta_min=1e-3)
 
+    # -- logging
+    utils.write_json(save_dir, "config.json", vars(args))
     # -- loop
     best_val_loss = np.inf
 
@@ -96,13 +99,18 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
 
             hist = utils.add_hist(hist, masks, outputs, num_classes)
             acc, acc_cls, mIoU, fwavacc, IoU = utils.label_accuracy_score(hist)
-
+            current_lr = utils.get_lr(optimizer)
+            
             if (step + 1) % args.log_interval == 0:
-                print(f'Epoch [{epoch+1}/{args.epochs}], Step [{step+1}/{len(train_loader)}], \
-                        Loss: {round(loss.item(),4)}, mIoU: {round(mIoU,4)}')
+                msg = f'Epoch [{epoch+1}/{args.epochs}], Step [{step+1}/{len(train_loader)}], \
+                        Loss: {round(loss.item(),4)}, mIoU: {round(mIoU,4)} lr {current_lr}'
+                print(msg)
+                utils.logging(save_dir, "log.txt", msg)
+
+        scheduler.step()
 
         if args.val == False:
-            utils.save_model(model, save_dir, f"epoch{step}.pth")
+            utils.save_model(model, save_dir, f"epoch{epoch}.pth")
 
         # val loop
         if (epoch + 1) % args.val_every == 0 and args.val:
@@ -136,17 +144,27 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
                 IoU_by_class = [{classes : round(IoU,4)} for IoU, classes in zip(IoU , val_dataset.category_names)]
                 
                 avrg_loss = total_loss / cnt
-                print(f'Validation #{epoch}  Average Loss: {round(avrg_loss.item(), 4)}, Accuracy : {round(acc, 4)}, \
-                        mIoU: {round(mIoU, 4)}')
-                print(f'IoU by class : {IoU_by_class}')
+                msg = f'Validation #{epoch}  Average Loss: {round(avrg_loss.item(), 4)}, Accuracy : {round(acc, 4)}, \
+                        mIoU: {round(mIoU, 4)}'
+                print(msg)
+                utils.logging(save_dir, "log.txt", msg)
+
+                msg = f'IoU by class : {IoU_by_class}'
+                print(msg)
+                utils.logging(save_dir, "log.txt", msg)
 
             if avrg_loss < best_val_loss:
                 print(f"Best performance at epoch: {epoch + 1}")
+                utils.logging(save_dir, "log.txt", f"Best performance at epoch: {epoch + 1}")
                 print(f"Save model in {save_dir}")
+                utils.logging(save_dir, "log.txt", f"Save model in {save_dir}")
                 best_val_loss = avrg_loss
                 utils.save_model(model, save_dir, "best.pth")
 
-            utils.save_model(model, save_dir, f"epoch{step}.pth")
+            if args.save_every:
+                utils.save_model(model, save_dir, f"epoch{epoch + 1}.pth")
+            else:
+                utils.save_model(model, save_dir, f"last.pth")
 
 def model_test(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
