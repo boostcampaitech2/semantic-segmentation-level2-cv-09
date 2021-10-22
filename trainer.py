@@ -63,9 +63,16 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
 
     # -- loss & metric
     # criterion = nn.CrossEntropyLoss()
-    criterion = smp.losses.FocalLoss(mode="multiclass")
-    optimizer = torch.optim.SGD(model.parameters(), lr = 1e-2)
-    scheduler = CosineAnnealingLR(optimizer, T_max=20, eta_min=1e-3)
+    # criterion = smp.losses.FocalLoss(mode="multiclass")
+
+    criterion_module = getattr(import_module("loss"), args.loss)
+    criterion = criterion_module()
+
+    # optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+    # optimizer = torch.optim.SGD(model.parameters(), lr = 1e-2)
+    optimizer_module = getattr(import_module("torch.optim"), args.optimizer)
+    optimizer = optimizer_module(model.parameters(), lr = args.lr)
+    # scheduler = CosineAnnealingLR(optimizer, T_max=30, eta_min=1e-3)
 
     # -- logging
     utils.write_json(save_dir, "config.json", vars(args))
@@ -107,7 +114,7 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
                 print(msg)
                 utils.logging(save_dir, "log.txt", msg)
 
-        scheduler.step()
+        # scheduler.step()
 
         if args.val == False:
             utils.save_model(model, save_dir, f"epoch{epoch}.pth")
