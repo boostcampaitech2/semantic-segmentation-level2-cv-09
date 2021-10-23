@@ -1,7 +1,6 @@
 from torch.utils.data import Dataset, DataLoader
 from pycocotools.coco import COCO
 
-import utils
 import cv2
 import os
 import numpy as np
