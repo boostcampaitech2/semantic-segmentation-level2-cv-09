@@ -12,3 +12,4 @@ from .DeepLabV3Plus_Xception import *
 from .DeepLabV3Plus_ResNet50 import *
 from .DeepLabV3Plus_ResNet101 import *
 from .UPlusPlus_ResNet101 import *
+from .UPlusPlus_Efficient_b5 import *

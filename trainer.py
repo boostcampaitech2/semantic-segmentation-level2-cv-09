@@ -5,6 +5,8 @@ import torch.nn as nn
 import numpy as np
 import os
 import json
+import wandb
+
 import segmentation_models_pytorch as smp
 from importlib import import_module
 
@@ -75,9 +77,14 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
     # scheduler = CosineAnnealingLR(optimizer, T_max=30, eta_min=1e-3)
 
     # -- logging
+    wandb.init(project='trash_segmentation', entity='cv-09-segmentation')
+    wandb.config = args
+    wandb.watch(model)
+
     utils.write_json(save_dir, "config.json", vars(args))
+
     # -- loop
-    best_val_loss = np.inf
+    best_val_mIoU = 0
 
     for epoch in range(args.epochs):
         # train loop
@@ -113,6 +120,7 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
                         Loss: {round(loss.item(),4)}, mIoU: {round(mIoU,4)} lr {current_lr}'
                 print(msg)
                 utils.logging(save_dir, "log.txt", msg)
+                wandb.log({"epoch":epoch, "loss":round(loss.item(), 4), "mIoU":round(mIoU, 4), "lr":current_lr})
 
         # scheduler.step()
 
@@ -147,6 +155,7 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
                     
                     hist = utils.add_hist(hist, masks, outputs, num_classes)
                 
+                # val set mIoU 계산
                 acc, acc_cls, mIoU, fwavacc, IoU = utils.label_accuracy_score(hist)
                 IoU_by_class = [{classes : round(IoU,4)} for IoU, classes in zip(IoU , val_dataset.category_names)]
                 
@@ -160,14 +169,21 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
                 print(msg)
                 utils.logging(save_dir, "log.txt", msg)
 
-            if avrg_loss < best_val_loss:
+                for iou in IoU_by_class:
+                    wandb.log(iou)
+
+                wandb.log({"epoch":epoch, "avg loss":round(avrg_loss.item(), 4), "acc":round(acc, 4), "mIoU":round(mIoU, 4)})
+
+            # 이전 epoch 보다 mIoU 증가한 경우 모델 저장
+            if mIoU < best_val_mIoU:
                 print(f"Best performance at epoch: {epoch + 1}")
                 utils.logging(save_dir, "log.txt", f"Best performance at epoch: {epoch + 1}")
                 print(f"Save model in {save_dir}")
                 utils.logging(save_dir, "log.txt", f"Save model in {save_dir}")
-                best_val_loss = avrg_loss
+                best_val_mIoU = avrg_loss
                 utils.save_model(model, save_dir, "best.pth")
 
+            # epoch마다 모델 저장
             if args.save_every:
                 utils.save_model(model, save_dir, f"epoch{epoch + 1}.pth")
             else:
