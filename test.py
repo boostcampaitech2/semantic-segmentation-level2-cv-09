@@ -15,6 +15,7 @@ def test(data_dir, model_dir, args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     size = args.size
     resize_module = A.Compose([A.Resize(size, size)])
+    
     # -- dataset
     test_dataset_module = getattr(import_module("dataset"), args.dataset) # default: BaseDataset
     test_dataset = test_dataset_module(

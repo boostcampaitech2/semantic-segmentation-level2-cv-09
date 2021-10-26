@@ -1,4 +1,5 @@
 from torch.optim.lr_scheduler import CosineAnnealingLR
+from torch.utils.data import dataset
 import utils
 import torch
 import torch.nn as nn
@@ -42,7 +43,7 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
         val_transform_module = getattr(import_module("dataset"), args.val_augmentation)
         val_transform = val_transform_module()
         val_dataset.set_transform(val_transform)
-
+    
     # -- data loader
     train_loader = torch.utils.data.DataLoader(
         dataset=train_dataset,
@@ -70,10 +71,11 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
     criterion_module = getattr(import_module("loss"), args.loss)
     criterion = criterion_module()
 
-    # optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
-    # optimizer = torch.optim.SGD(model.parameters(), lr = 1e-2)
     optimizer_module = getattr(import_module("torch.optim"), args.optimizer)
     optimizer = optimizer_module(model.parameters(), lr = args.lr)
+
+    # scheduler_moudler = getattr(import_module("scheduler"), args.scheduler)
+    # scheduler = scheduler_moudler()
     # scheduler = CosineAnnealingLR(optimizer, T_max=30, eta_min=1e-3)
 
     # -- logging
@@ -199,3 +201,4 @@ def model_test(args):
     print("input shape:", input.shape)
     output = model(input).to(device)
     print("output shape: ", output.shape)
+    
