@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 class FCN16s(nn.Module):
-    def __init__(self, num_classes=21):
+    def __init__(self, backbone, num_classes=11):
         super(FCN16s, self).__init__()
         self.relu    = nn.ReLU(inplace=True)
         

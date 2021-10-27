@@ -3,7 +3,7 @@ from torchvision import models
 import torch.nn as nn
 
 class DeepLabV3Plus_ResNet50(nn.Module):
-    def __init__(self, num_classes=11):
+    def __init__(self, backbone, num_classes=11):
         super(DeepLabV3Plus_ResNet50, self).__init__()
 
         self.model = models.segmentation.deeplabv3_resnet50(pretrained=True,

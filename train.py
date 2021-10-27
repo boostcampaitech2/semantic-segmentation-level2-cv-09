@@ -7,6 +7,7 @@ if __name__ == '__main__':
 
     # Hyperparameter
     parser.add_argument('--model', type=str, default='FCN32s', help='architecture (default: FCN32s)')
+    parser.add_argument('--backbone', type=str, default="resnet50", help="set backbone like encoder (default: resnet50)")
     parser.add_argument('--epochs', type=int, default=1, help='number of epochs to train (default: 1)')
     parser.add_argument('--loss', type=str, default="CrossEntropyLoss", help='loss function (default: CrossEntropyLoss)')
     parser.add_argument('--dataset', type=str, default='BaseDataset', help='dataset type (default: BaseDataset)')

@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 class FCN8s(nn.Module):
-    def __init__(self, num_classes=11):
+    def __init__(self, backbone, num_classes=11):
         super(FCN8s, self).__init__()
 
         # conv1

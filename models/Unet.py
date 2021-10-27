@@ -2,12 +2,12 @@ import torch
 import torch.nn as nn
 import segmentation_models_pytorch as smp
 
-class UPlusPlus_Efficient_b5(nn.Module):
-    def __init__(self, num_classes=11):
-        super(UPlusPlus_Efficient_b5, self).__init__()
+class Unet(nn.Module):
+    def __init__(self, backbone, num_classes=11):
+        super(Unet, self).__init__()
         
-        self.model = smp.UnetPlusPlus(
-            encoder_name="timm-efficientnet-b5",
+        self.model = smp.Unet(
+            encoder_name=backbone,
             encoder_weights="imagenet",
             in_channels=3,
             classes=num_classes,

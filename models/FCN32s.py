@@ -3,7 +3,7 @@ import torch.nn as nn
 
 
 class FCN32s(nn.Module):
-    def __init__(self, num_classes=21):
+    def __init__(self,backbone, num_classes=11):
         super(FCN32s, self).__init__()
         
         def CBR(in_channels, out_channels, kernel_size=3, stride=1, padding=1):

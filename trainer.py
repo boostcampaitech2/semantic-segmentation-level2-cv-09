@@ -62,7 +62,10 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
         )
     # -- model
     model_module = getattr(import_module("models"), args.model)
-    model = model_module(num_classes=11).to(device)
+    model = model_module(
+        backbone=args.backbone,
+        num_classes=11
+    ).to(device)
 
     # -- loss & metric
     # criterion = nn.CrossEntropyLoss()
