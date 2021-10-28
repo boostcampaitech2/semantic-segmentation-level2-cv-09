@@ -1,8 +1,11 @@
+import argparse
 import glob
 import tqdm
 from src.create_annotations import *
 import random
 import torch
+import argparse
+
 '''
 coco format json으로 변경하는 파일입니다. 
 
@@ -52,14 +55,10 @@ category_colors = {
 multipolygon_ids = []
 
 # Get "images" and "annotations" info 
-def images_annotations_info(copy_paste_path):
-    # This id will be automatically increased as we go
-    annotation_id = 0
-    image_id = 0
-    annotations = []
-    images = []
+def images_annotations_info(dataset_path, annotation_id, image_id, annotations, images):
+    
     for keyword in ['batch_04','batch_05', 'batch_06']:
-        for mask_image in tqdm.tqdm(glob.glob(os.path.join(copy_paste_path, 'SegmentationCopy', keyword, "*.png"))):
+        for mask_image in tqdm.tqdm(glob.glob(os.path.join(dataset_path, 'SegmentationCopy', keyword, "*.png"))):
             # The mask image is *.png but the original image is *.jpg.
             # We make a reference to the original file in the COCO JSON file
             original_file_name = os.path.join(keyword, os.path.basename(mask_image).replace('.png', '.jpg'))
@@ -98,20 +97,57 @@ def images_annotations_info(copy_paste_path):
             image_id += 1
     return images, annotations, annotation_id
 
+def get_args():
+    parser = argparse.ArgumentParser()
+    
+    # Hyperparmeter
+    parser.add_argument('--main_json', type=str, default='train_all.json', help='set main json file to add with copy_paste json file (default: train_all.json)')
+    parser.add_argument('--mode', type=str, default='add', help='Yon can choose add or self (default : add)')
+
+    args = parser.parse_args()
+    print(args)
+
+    return args
+
 if __name__ == "__main__":
     # fix seed
     seed_everything(42)
     
-    # Get the standard COCO JSON format
-    coco_format = get_coco_json_format()
-    
-    copy_paste_path = "/opt/ml/segmentation/input/data/"  
-    
-    # Create category section
-    coco_format["categories"] = create_category_annotation(category_ids)
+    # arguments
+    args = get_args()
+
+    dataset_path = "/opt/ml/segmentation/input/data/"  
+
+    if args.mode == 'add':  # 기존 json 파일과 합칠 때
+        anns_file_path = dataset_path + args.main_json
+
+        # Read annotations
+        with open(anns_file_path, 'r') as f:
+            coco_format = json.loads(f.read())
+        
+        # This id will be automatically increased as we go
+        annotations = coco_format["annotations"]
+        images = coco_format['images']
+        annotation_id = len(annotations)
+        image_id = len(images)
+
+
+    elif args.mode == 'self': # json 파일을 합치지 않을 때
+
+        # Get the standard COCO JSON format
+        coco_format = get_coco_json_format()
+
+        # This id will be automatically increased as we go
+        annotations = []
+        images = []
+        annotation_id = 0
+        image_id = 0
+
+        # Create category section
+        coco_format["categories"] = create_category_annotation(category_ids)
 
     # Create images and annotations sections
-    coco_format["images"], coco_format["annotations"], annotation_cnt = images_annotations_info(copy_paste_path)
+    coco_format["images"], coco_format["annotations"], annotation_cnt = images_annotations_info(dataset_path, annotation_id, image_id, annotations, images)
 
     with open("/opt/ml/segmentation/input/data/copy_paste.json","w") as outfile:
         json.dump(coco_format, outfile)
