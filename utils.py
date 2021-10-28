@@ -37,8 +37,7 @@ def set_seed(random_seed=42):
     random.seed(random_seed)
 
 def save_model(model, save_dir, file_name):
-    if os.path.isdir(save_dir) == False:
-        os.mkdir(save_dir)
+    os.makedirs(save_dir, exist_ok=True)
     check_point = {'net': model.state_dict()}
     output_path = os.path.join(save_dir, file_name)
     torch.save(model, output_path)
@@ -62,8 +61,7 @@ def _fast_hist(label_true, label_pred, n_class):
     return hist
 
 def write_json(dir, log_file, data):
-    if os.path.isdir(dir) == False:
-        os.mkdir(dir)
+    os.makedirs(dir, exist_ok=True)
 
     with open(os.path.join(dir, log_file), 'a', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=1)
