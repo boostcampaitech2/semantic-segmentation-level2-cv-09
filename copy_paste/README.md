@@ -20,7 +20,7 @@ segmentation
 ├── copy_paste_segmentation_coco_format
 │   ├─ check_copy_paste.ipynb
 │   ├─ copy_paste.py
-│   ├─ create-copy-paste-dataset.py
+│   ├─ mask_convert_json.py
 │   ├─ get_coco_mask.py
 │   ├─ README.md
 │   ├─ requirements.txt
@@ -63,7 +63,7 @@ python copy_paste.py --input_dir ../../input/data/ --output_dir ../../input/data
 
 ## 4. copy_paste mask로부터 coco format json 파일 만들기
 ```
-python create-copy-paste-dataset.py 
+python mask_convert_json.py
 ```
 
 
