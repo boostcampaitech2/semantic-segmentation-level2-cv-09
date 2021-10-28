@@ -11,6 +11,26 @@ import wandb
 import segmentation_models_pytorch as smp
 from importlib import import_module
 
+class_labels = {
+    0: "Background",
+    1: "General trash",
+    2: "Paper",
+    3: "Paper pack",
+    4: "Metal",
+    5: "Glass",
+    6: "Plastic",
+    7: "Styrofoam",
+    8: "Plastic bag",
+    9: "Battery",
+    10: "Clothing"
+}
+
+# util function for generating interactive image mask from components
+def wb_mask(bg_img, pred_mask, true_mask):
+  return wandb.Image(bg_img, masks={
+    "prediction" : {"mask_data" : pred_mask, "class_labels" : class_labels},
+    "ground truth" : {"mask_data" : true_mask, "class_labels" : class_labels}})
+
 def train(data_dir, model_dir, args): # data_dir, model_dir, args
 
     # -- settings
@@ -82,7 +102,7 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
     # scheduler = CosineAnnealingLR(optimizer, T_max=30, eta_min=1e-3)
 
     # -- logging
-    wandb.init(project='trash_segmentation', entity='cv-09-segmentation')
+    wandb.init(project='trash_segmentation', entity='cv-09-segmentation', name = args.model + '_' + args.backbone + '_' + args.optimizer)
     wandb.config = args
     wandb.watch(model)
 
@@ -141,6 +161,8 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
                 cnt = 0
                 
                 hist = np.zeros((num_classes, num_classes))
+                
+
                 for step, (images, masks, _) in enumerate(val_loader):
                     
                     images = torch.stack(images)       
@@ -159,6 +181,7 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
                     masks = masks.detach().cpu().numpy()
                     
                     hist = utils.add_hist(hist, masks, outputs, num_classes)
+                   
                 
                 # val set mIoU 계산
                 acc, acc_cls, mIoU, fwavacc, IoU = utils.label_accuracy_score(hist)
@@ -179,6 +202,12 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
 
                 wandb.log({"epoch":epoch, "avg loss":round(avrg_loss.item(), 4), "acc":round(acc, 4), "mIoU":round(mIoU, 4)})
 
+                # wandb에 이미지를 보내는 기능입니다.
+                mask_list=[] 
+                for image, pred, mask in zip(images, outputs, masks):
+                    mask_list.append(wb_mask(image, pred, mask))
+                wandb.log({"predictions" : mask_list})
+
             # 이전 epoch 보다 mIoU 증가한 경우 모델 저장
             if mIoU < best_val_mIoU:
                 print(f"Best performance at epoch: {epoch + 1}")
@@ -187,6 +216,8 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
                 utils.logging(save_dir, "log.txt", f"Save model in {save_dir}")
                 best_val_mIoU = avrg_loss
                 utils.save_model(model, save_dir, "best.pth")
+                
+                
 
             # epoch마다 모델 저장
             if args.save_every:
