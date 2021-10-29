@@ -23,14 +23,14 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
     train_dataset_module = getattr(import_module("dataset"), args.dataset) # default: BaseDataset
     train_dataset = train_dataset_module(
         data_dir = data_dir,
-        ann_file = args.train_ann_json,
+        ann_file = "train.json",
         train = True
     )
     if args.val:
         val_dataset_module = getattr(import_module("dataset"), args.dataset) # default: BaseDataset
         val_dataset = val_dataset_module(
             data_dir = data_dir,
-            ann_file = args.test_ann_json,
+            ann_file = "val.json",
             train = True
         )
     num_classes = train_dataset.num_classes
@@ -51,7 +51,6 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
         shuffle=True,
         num_workers=args.num_workers,
         collate_fn=utils.collate_fn,
-        drop_last = True
     )
     if args.val:
         val_loader = torch.utils.data.DataLoader(
@@ -60,7 +59,6 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
             shuffle=True,
             num_workers=args.num_workers,
             collate_fn=utils.collate_fn,
-            drop_last = True
         )
     # -- model
     model_module = getattr(import_module("models"), args.model)
