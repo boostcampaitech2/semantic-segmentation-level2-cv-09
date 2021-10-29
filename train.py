@@ -29,8 +29,6 @@ if __name__ == '__main__':
     # Container environment
     parser.add_argument('--data_dir', type=str, default=os.environ.get('SM_CHANNEL_TRAIN', '/opt/ml/segmentation/input/data/'))
     parser.add_argument('--model_dir', type=str, default=os.environ.get('SM_MODEL_DIR', './model'))
-    parser.add_argument('--train_ann_json', type=str, default='train.json', help='train.json, copy_paste.json')
-    parser.add_argument('--test_ann_json', type=str, default='val.json', help='val.json')
 
     args = parser.parse_args()
     print(args)
