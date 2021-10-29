@@ -8,6 +8,9 @@ import cv2
 import matplotlib.pyplot as plt
 from pycocotools.coco import COCO
 import copy
+import torch
+import random
+
 category = {
     "Background": 0,
     "General trash":1,
@@ -33,8 +36,14 @@ def apply_augmentation(image, mask):
 
     return transformed
 
-def set_seed(random_seed=42):
-    np.random.seed(random_seed)
+def set_seed(seed=42):
+    random.seed(seed)
+    np.random.seed(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)  # type: ignore
+    torch.backends.cudnn.deterministic = True  # type: ignore
+    torch.backends.cudnn.benchmark = True  # type: ignore
 
 def id_to_objnum(coco, image):
     ann_ids = coco.getAnnIds(imgIds=image['id'])
@@ -145,7 +154,7 @@ def main(args):
     print("Synthesis background and patch...")
     print("patches number:", len(patches))
     print("background number:", len(background))
-    image_id = 60000
+    image_id = args.start_index
     for i in tqdm(range(args.num_output)):
 
         random_patch = np.random.choice(patches, 1)
@@ -161,12 +170,13 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--patch", nargs="+", type=list, default=["Paper pack", "Battery", "Plastic"])
-    parser.add_argument("--background", nargs="+", type=list, default=["Battery", "Clothing", "Metal", "General trash"])
+    parser.add_argument("--patch", nargs="+", type=list, default=["Paper pack", "Battery", "Glass", "Metal"])
+    parser.add_argument("--background", nargs="+", type=list, default=["Battery", "Clothing", "General trash"])
     parser.add_argument("--num_output", type=int, default=500)
     parser.add_argument("--json_path", type=str, default="train_all.json")
     parser.add_argument("--output_json", type=str, default="oversampled_train.json")
     parser.add_argument("--merge_json", default=True, action='store_true')
+    parser.add_argument("--start_index", type=int, default=60000)
 
     parser.add_argument("--image_dir", type=str, default="output/image")
     parser.add_argument("--mask_dir", type=str, default="output/mask")
