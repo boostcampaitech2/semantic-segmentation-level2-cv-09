@@ -8,9 +8,6 @@ import cv2
 import matplotlib.pyplot as plt
 from pycocotools.coco import COCO
 import copy
-import torch
-import random
-
 category = {
     "Background": 0,
     "General trash":1,
@@ -36,14 +33,8 @@ def apply_augmentation(image, mask):
 
     return transformed
 
-def set_seed(seed=42):
-    random.seed(seed)
-    np.random.seed(seed)
-    os.environ["PYTHONHASHSEED"] = str(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)  # type: ignore
-    torch.backends.cudnn.deterministic = True  # type: ignore
-    torch.backends.cudnn.benchmark = True  # type: ignore
+def set_seed(random_seed=42):
+    np.random.seed(random_seed)
 
 def id_to_objnum(coco, image):
     ann_ids = coco.getAnnIds(imgIds=image['id'])
