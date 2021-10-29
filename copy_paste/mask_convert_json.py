@@ -57,44 +57,44 @@ multipolygon_ids = []
 # Get "images" and "annotations" info 
 def images_annotations_info(dataset_path, annotation_id, image_id, annotations, images):
     
-    for keyword in ['batch_04','batch_05', 'batch_06']:
-        for mask_image in tqdm.tqdm(glob.glob(os.path.join(dataset_path, 'SegmentationCopy', keyword, "*.png"))):
-            # The mask image is *.png but the original image is *.jpg.
-            # We make a reference to the original file in the COCO JSON file
-            original_file_name = os.path.join(keyword, os.path.basename(mask_image).replace('.png', '.jpg'))
+    
+    for mask_image in tqdm.tqdm(glob.glob(os.path.join(dataset_path, 'SegmentationCopy', 'batch_04', "*.png"))):
+        # The mask image is *.png but the original image is *.jpg.
+        # We make a reference to the original file in the COCO JSON file
+        original_file_name = os.path.join('batch_04', os.path.basename(mask_image).replace('.png', '.jpg'))
 
-            # Open the image and (to be sure) we convert it to RGB
-            mask_image_open = Image.open(mask_image).convert("RGB")
-            w, h = mask_image_open.size
+        # Open the image and (to be sure) we convert it to RGB
+        mask_image_open = Image.open(mask_image).convert("RGB")
+        w, h = mask_image_open.size
+        
+        # "images" info 
+        image = create_image_annotation(original_file_name, w, h, image_id)
+        images.append(image)
+
+        sub_masks = create_sub_masks(mask_image_open, w, h)
+        for color, sub_mask in sub_masks.items():
+            category_id = category_colors.get(color)
+            if category_id==None:
+                continue
+
+            # "annotations" info
+            polygons, segmentations = create_sub_mask_annotation(sub_mask)
+
             
-            # "images" info 
-            image = create_image_annotation(original_file_name, w, h, image_id)
-            images.append(image)
-
-            sub_masks = create_sub_masks(mask_image_open, w, h)
-            for color, sub_mask in sub_masks.items():
-                category_id = category_colors.get(color)
-                if category_id==None:
+            for i in range(len(polygons)):
+                # Cleaner to recalculate this variable
+                if polygons[i].type == 'MultiPolygon':
                     continue
-
-                # "annotations" info
-                polygons, segmentations = create_sub_mask_annotation(sub_mask)
-
+                    
+                else:
+                    segmentation = [np.array(polygons[i].exterior.coords).ravel().tolist()]
                 
-                for i in range(len(polygons)):
-                    # Cleaner to recalculate this variable
-                    if polygons[i].type == 'MultiPolygon':
-                        continue
-                        
-                    else:
-                        segmentation = [np.array(polygons[i].exterior.coords).ravel().tolist()]
-                   
-                    
-                    
-                    annotation = create_annotation_format(polygons[i], segmentation, image_id, category_id, annotation_id)
-                    annotations.append(annotation)
-                    annotation_id += 1
-            image_id += 1
+                
+                
+                annotation = create_annotation_format(polygons[i], segmentation, image_id, category_id, annotation_id)
+                annotations.append(annotation)
+                annotation_id += 1
+        image_id += 1
     return images, annotations, annotation_id
 
 def get_args():

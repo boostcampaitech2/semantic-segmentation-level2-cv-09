@@ -11,6 +11,22 @@ import numpy as np
 import tqdm
 import random
 import torch
+from pycocotools.coco import COCO
+import json
+
+category = {
+    "Background": 0,
+    "General trash":1,
+    "Paper":2,
+    "Paper pack":3,
+    "Metal":4,
+    "Glass":5,
+    "Plastic":6,
+    "Styrofoam":7,
+    "Plastic bag":8,
+    "Battery":9,
+    "Clothing":10,
+}
 
 def seed_everything(seed: int = 42):
     random.seed(seed)
@@ -20,6 +36,7 @@ def seed_everything(seed: int = 42):
     torch.cuda.manual_seed(seed)  # type: ignore
     torch.backends.cudnn.deterministic = True  # type: ignore
     torch.backends.cudnn.benchmark = True  # type: ignore
+
 
 def save_colored_mask(mask, save_path):
     lbl_pil = Image.fromarray(mask.astype(np.uint8), mode="P")
@@ -33,6 +50,41 @@ def random_flip_horizontal(mask, img, p=0.5):
         img = img[:, ::-1, :]
         mask = mask[:, ::-1]
     return mask, img
+
+
+def get_image_ann_id(coco:COCO, image:dict):
+    ann_ids = coco.getAnnIds(imgIds=image['id'])
+    return ann_ids, len(ann_ids)
+
+
+def get_single_ann_image(target_categories:list, path:str, coco_from:COCO):
+    """
+        1. json file load
+        2. json file load using coco library
+        3. finding an image that has a single object that you're aiming for
+    """
+    target = []
+    for t_cat in target_categories:
+        target.append(category[t_cat])
+    print("target class:", target)
+
+    json_file = None
+    with open(path, 'r') as f:
+        json_file = json.load(f)
+
+    images = json_file["images"]
+
+    single_obj_images = []
+    for image in images:
+        ids, length = get_image_ann_id(coco_from, image)
+        if True : # length == 1:
+            anns_info = coco_from.loadAnns(ids)
+            for ann in anns_info: # 한개라도 target annotation이 있으면 이미지 추가
+                if ann["category_id"] in target:
+                    single_obj_images.append(image['file_name'])
+                    break
+
+    return single_obj_images
 
 
 def img_add(img_src, img_main, mask_src):
@@ -140,45 +192,48 @@ def main(args):
 
     # create output path
     os.makedirs(os.path.join(args.output_dir, 'SegmentationCopy', 'batch_04'), exist_ok=True)
-    os.makedirs(os.path.join(args.output_dir, 'SegmentationCopy', 'batch_05'), exist_ok=True)
-    os.makedirs(os.path.join(args.output_dir, 'SegmentationCopy', 'batch_06'), exist_ok=True)
     os.makedirs(os.path.join(args.output_dir, 'batch_04'), exist_ok=True)
-    os.makedirs(os.path.join(args.output_dir, 'batch_05'), exist_ok=True)
-    os.makedirs(os.path.join(args.output_dir, 'batch_06'), exist_ok=True)
  
     
-    batch_folders = os.listdir(segclass)
-    for batch_folder in batch_folders:
-        masks_path = os.listdir(os.path.join(segclass, batch_folder))
-        tbar = tqdm.tqdm(masks_path, ncols=100)
-        for mask_path in tbar:
-            # get source mask and img
-            mask_src = np.asarray(Image.open(os.path.join(segclass, batch_folder, mask_path)), dtype=np.uint8)
-            img_src = cv2.imread(os.path.join(JPEGs, batch_folder, mask_path.replace('.png', '.jpg')))
+    # -- get target image path
+    coco= COCO(os.path.join(args.input_dir, args.json_path))
+    target_path = get_single_ann_image(args.patch, os.path.join(args.output_dir, args.json_path), coco)
+    image_count = 0
 
-            # random choice main mask/img
-            mask_main_path = np.random.choice(masks_path)
-            mask_main = np.asarray(Image.open(os.path.join(segclass, batch_folder, mask_main_path)), dtype=np.uint8)
-            img_main = cv2.imread(os.path.join(JPEGs, batch_folder, mask_main_path.replace('.png', '.jpg')))
+  
+    images_path = list(os.path.join(JPEGs, target) for target in target_path) # target: batch_04/0001.jpg
+    tbar = tqdm.tqdm(images_path, ncols=100)
+    for image_path in tbar:
+        # get source mask and img
+        mask_src = np.asarray(Image.open(image_path.replace('.jpg', '.png').replace('JPEGImages', 'SegmentationClass')), dtype=np.uint8)
+        img_src = cv2.imread(image_path)
 
-            # Copy-Paste data augmentation
-            mask, img = copy_paste(mask_src, img_src, mask_main, img_main)
+        # random choice main mask/img
+        mask_main_path = np.random.choice(images_path)
+        mask_main = np.asarray(Image.open(mask_main_path.replace('.jpg', '.png').replace('JPEGImages', 'SegmentationClass')), dtype=np.uint8)
+        img_main = cv2.imread(os.path.join(mask_main_path))
 
-            mask_filename = "copy_paste_" + mask_path
-            img_filename = mask_filename.replace('.png', '.jpg')
-            save_colored_mask(mask, os.path.join(args.output_dir, 'SegmentationCopy', batch_folder, mask_filename))
-            cv2.imwrite(os.path.join(args.output_dir, batch_folder, img_filename), img)
+        # Copy-Paste data augmentation
+        mask, img = copy_paste(mask_src, img_src, mask_main, img_main)
+
+        mask_filename = "copy_paste_" + f'{image_count:0>4}.png'
+        img_filename = mask_filename.replace('.png', '.jpg')
+        save_colored_mask(mask, os.path.join(args.output_dir, 'SegmentationCopy', 'batch_04', mask_filename))
+        cv2.imwrite(os.path.join(args.output_dir, 'batch_04', img_filename), img)
+        image_count+=1
 
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input_dir", default="../input/data/", type=str,
+    parser.add_argument("--input_dir", default="../../input/data/", type=str,
                         help="input annotated directory")
-    parser.add_argument("--output_dir", default="../input/data/", type=str,
+    parser.add_argument("--output_dir", default="../../input/data/", type=str,
                         help="output dataset directory")
     parser.add_argument("--lsj", default=True, type=bool, help="if use Large Scale Jittering")
     parser.add_argument("--lsj_min", default=0.2, type=float, help='recommend 0.2 ~ 0.4')
     parser.add_argument("--lsj_max", default=2, type=float, help='recommend 1.2 ~ 2')
+    parser.add_argument("--json_path", default='train.json', type=str, help='recommend train.json')
+    parser.add_argument("--patch", nargs="+", type=list, default=["Paper pack", "Battery", "Plastic", 'Clothing',"Glass" ])
 
     return parser.parse_args()
 

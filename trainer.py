@@ -185,7 +185,7 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
                 utils.logging(save_dir, "log.txt", f"Best performance at epoch: {epoch + 1}")
                 print(f"Save model in {save_dir}")
                 utils.logging(save_dir, "log.txt", f"Save model in {save_dir}")
-                best_val_mIoU = avrg_loss
+                best_val_mIoU = mIoU
                 utils.save_model(model, save_dir, "best.pth")
 
             # epoch마다 모델 저장
