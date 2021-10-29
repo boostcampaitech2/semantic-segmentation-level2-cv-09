@@ -77,10 +77,12 @@ def get_single_ann_image(target_categories:list, path:str, coco_from:COCO):
     single_obj_images = []
     for image in images:
         ids, length = get_image_ann_id(coco_from, image)
-        if length == 1:
-            ann_info = coco_from.loadAnns(ids)
-            if ann_info[0]["category_id"] in target:
-                single_obj_images.append(image['file_name'])
+        if True : # length == 1:
+            anns_info = coco_from.loadAnns(ids)
+            for ann in anns_info: # 한개라도 target annotation이 있으면 이미지 추가
+                if ann["category_id"] in target:
+                    single_obj_images.append(image['file_name'])
+                    break
 
     return single_obj_images
 
@@ -190,37 +192,35 @@ def main(args):
 
     # create output path
     os.makedirs(os.path.join(args.output_dir, 'SegmentationCopy', 'batch_04'), exist_ok=True)
-    os.makedirs(os.path.join(args.output_dir, 'SegmentationCopy', 'batch_05'), exist_ok=True)
-    os.makedirs(os.path.join(args.output_dir, 'SegmentationCopy', 'batch_06'), exist_ok=True)
     os.makedirs(os.path.join(args.output_dir, 'batch_04'), exist_ok=True)
-    os.makedirs(os.path.join(args.output_dir, 'batch_05'), exist_ok=True)
-    os.makedirs(os.path.join(args.output_dir, 'batch_06'), exist_ok=True)
+ 
     
-    # -- setting
+    # -- get target image path
     coco= COCO(os.path.join(args.input_dir, args.json_path))
-    get_single_ann_image(args.patch, os.path.join(args.data_dir, args.json_path), coco)
-    
-    batch_folders = os.listdir(segclass)
-    for batch_folder in batch_folders:
-        masks_path = os.listdir(os.path.join(segclass, batch_folder))
-        tbar = tqdm.tqdm(masks_path, ncols=100)
-        for mask_path in tbar:
-            # get source mask and img
-            mask_src = np.asarray(Image.open(os.path.join(segclass, batch_folder, mask_path)), dtype=np.uint8)
-            img_src = cv2.imread(os.path.join(JPEGs, batch_folder, mask_path.replace('.png', '.jpg')))
+    target_path = get_single_ann_image(args.patch, os.path.join(args.output_dir, args.json_path), coco)
+    image_count = 0
 
-            # random choice main mask/img
-            mask_main_path = np.random.choice(masks_path)
-            mask_main = np.asarray(Image.open(os.path.join(segclass, batch_folder, mask_main_path)), dtype=np.uint8)
-            img_main = cv2.imread(os.path.join(JPEGs, batch_folder, mask_main_path.replace('.png', '.jpg')))
+  
+    images_path = list(os.path.join(JPEGs, target) for target in target_path) # target: batch_04/0001.jpg
+    tbar = tqdm.tqdm(images_path, ncols=100)
+    for image_path in tbar:
+        # get source mask and img
+        mask_src = np.asarray(Image.open(image_path.replace('.jpg', '.png').replace('JPEGImages', 'SegmentationClass')), dtype=np.uint8)
+        img_src = cv2.imread(image_path)
 
-            # Copy-Paste data augmentation
-            mask, img = copy_paste(mask_src, img_src, mask_main, img_main)
+        # random choice main mask/img
+        mask_main_path = np.random.choice(images_path)
+        mask_main = np.asarray(Image.open(mask_main_path.replace('.jpg', '.png').replace('JPEGImages', 'SegmentationClass')), dtype=np.uint8)
+        img_main = cv2.imread(os.path.join(mask_main_path))
 
-            mask_filename = "copy_paste_" + mask_path
-            img_filename = mask_filename.replace('.png', '.jpg')
-            save_colored_mask(mask, os.path.join(args.output_dir, 'SegmentationCopy', batch_folder, mask_filename))
-            cv2.imwrite(os.path.join(args.output_dir, batch_folder, img_filename), img)
+        # Copy-Paste data augmentation
+        mask, img = copy_paste(mask_src, img_src, mask_main, img_main)
+
+        mask_filename = "copy_paste_" + f'{image_count:0>4}.png'
+        img_filename = mask_filename.replace('.png', '.jpg')
+        save_colored_mask(mask, os.path.join(args.output_dir, 'SegmentationCopy', 'batch_04', mask_filename))
+        cv2.imwrite(os.path.join(args.output_dir, 'batch_04', img_filename), img)
+        image_count+=1
 
 
 def get_args():
@@ -233,7 +233,7 @@ def get_args():
     parser.add_argument("--lsj_min", default=0.2, type=float, help='recommend 0.2 ~ 0.4')
     parser.add_argument("--lsj_max", default=2, type=float, help='recommend 1.2 ~ 2')
     parser.add_argument("--json_path", default='train.json', type=str, help='recommend train.json')
-    parser.add_argument("--patch", nargs="+", type=list, default=["Paper pack", "Battery", "Plastic"])
+    parser.add_argument("--patch", nargs="+", type=list, default=["Paper pack", "Battery", "Plastic", 'Clothing',"Glass" ])
 
     return parser.parse_args()
 

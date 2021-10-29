@@ -55,8 +55,17 @@ python get_coco_mask.py  --input_dir ../../input/data/ --split train_all
 ## 3. 원본 이미지, 원본 mask, 랜덤 이미지, 랜덤 mask로부터 copy_paste
 ```
 python copy_paste.py --input_dir ../../input/data/ --output_dir ../../input/data/ 
+
+--patch ["Paper pack", "Battery", "Plastic", 'Clothing',"Glass" ]
+
+--json_path train.json
+
+--lsj True
 ```
-- 예시)
+
+
+
+- 결과)
 
 ![image](https://user-images.githubusercontent.com/63527907/139034387-1ec9d9c8-3dcd-4859-9f8a-5ead0fe54f40.png)
 

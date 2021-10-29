@@ -34,12 +34,12 @@ def save_colored_mask(mask, save_path):
  
 def main(args):
     annotation_file = os.path.join(args.input_dir, '{}.json'.format(args.split))
-    os.makedirs(os.path.join(args.input_dir, 'SegmentationClass', 'batch_04'), exist_ok=True)
-    os.makedirs(os.path.join(args.input_dir, 'SegmentationClass', 'batch_05'), exist_ok=True)
-    os.makedirs(os.path.join(args.input_dir, 'SegmentationClass', 'batch_06'), exist_ok=True)
-    os.makedirs(os.path.join(args.input_dir, 'JPEGImages', 'batch_04'), exist_ok=True)
-    os.makedirs(os.path.join(args.input_dir, 'JPEGImages', 'batch_05'), exist_ok=True)
-    os.makedirs(os.path.join(args.input_dir, 'JPEGImages', 'batch_06'), exist_ok=True)
+    os.makedirs(os.path.join(args.input_dir, 'SegmentationClass', 'batch_01_vt'), exist_ok=True)
+    os.makedirs(os.path.join(args.input_dir, 'SegmentationClass', 'batch_02_vt'), exist_ok=True)
+    os.makedirs(os.path.join(args.input_dir, 'SegmentationClass', 'batch_03'), exist_ok=True)
+    os.makedirs(os.path.join(args.input_dir, 'JPEGImages', 'batch_01_vt'), exist_ok=True)
+    os.makedirs(os.path.join(args.input_dir, 'JPEGImages', 'batch_02_vt'), exist_ok=True)
+    os.makedirs(os.path.join(args.input_dir, 'JPEGImages', 'batch_03'), exist_ok=True)
     coco = COCO(annotation_file)
     catIds = coco.getCatIds()
     imgIds = coco.getImgIds()
@@ -53,8 +53,8 @@ def main(args):
             for i in range(len(anns) - 1):
                 mask += coco.annToMask(anns[i + 1]) * anns[i + 1]['category_id']
             img_origin_path = os.path.join(args.input_dir, img['file_name'])
-            img_output_path = os.path.join(args.input_dir, 'JPEGImages', img['file_name'].replace('batch_01_vt','batch_04').replace('batch_02_vt','batch_05').replace('batch_03','batch_06'))
-            seg_output_path = os.path.join(args.input_dir, 'SegmentationClass', img['file_name'].replace('.jpg', '.png').replace('batch_01_vt','batch_04').replace('batch_02_vt','batch_05').replace('batch_03','batch_06'))
+            img_output_path = os.path.join(args.input_dir, 'JPEGImages', img['file_name'])
+            seg_output_path = os.path.join(args.input_dir, 'SegmentationClass', img['file_name'].replace('.jpg', '.png'))
             shutil.copy(img_origin_path, img_output_path)
             save_colored_mask(mask, seg_output_path)
  
