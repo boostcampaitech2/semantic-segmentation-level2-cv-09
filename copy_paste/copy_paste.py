@@ -11,6 +11,22 @@ import numpy as np
 import tqdm
 import random
 import torch
+from pycocotools.coco import COCO
+import json
+
+category = {
+    "Background": 0,
+    "General trash":1,
+    "Paper":2,
+    "Paper pack":3,
+    "Metal":4,
+    "Glass":5,
+    "Plastic":6,
+    "Styrofoam":7,
+    "Plastic bag":8,
+    "Battery":9,
+    "Clothing":10,
+}
 
 def seed_everything(seed: int = 42):
     random.seed(seed)
@@ -20,6 +36,7 @@ def seed_everything(seed: int = 42):
     torch.cuda.manual_seed(seed)  # type: ignore
     torch.backends.cudnn.deterministic = True  # type: ignore
     torch.backends.cudnn.benchmark = True  # type: ignore
+
 
 def save_colored_mask(mask, save_path):
     lbl_pil = Image.fromarray(mask.astype(np.uint8), mode="P")
@@ -33,6 +50,39 @@ def random_flip_horizontal(mask, img, p=0.5):
         img = img[:, ::-1, :]
         mask = mask[:, ::-1]
     return mask, img
+
+
+def get_image_ann_id(coco:COCO, image:dict):
+    ann_ids = coco.getAnnIds(imgIds=image['id'])
+    return ann_ids, len(ann_ids)
+
+
+def get_single_ann_image(target_categories:list, path:str, coco_from:COCO):
+    """
+        1. json file load
+        2. json file load using coco library
+        3. finding an image that has a single object that you're aiming for
+    """
+    target = []
+    for t_cat in target_categories:
+        target.append(category[t_cat])
+    print("target class:", target)
+
+    json_file = None
+    with open(path, 'r') as f:
+        json_file = json.load(f)
+
+    images = json_file["images"]
+
+    single_obj_images = []
+    for image in images:
+        ids, length = get_image_ann_id(coco_from, image)
+        if length == 1:
+            ann_info = coco_from.loadAnns(ids)
+            if ann_info[0]["category_id"] in target:
+                single_obj_images.append(image['file_name'])
+
+    return single_obj_images
 
 
 def img_add(img_src, img_main, mask_src):
@@ -145,7 +195,10 @@ def main(args):
     os.makedirs(os.path.join(args.output_dir, 'batch_04'), exist_ok=True)
     os.makedirs(os.path.join(args.output_dir, 'batch_05'), exist_ok=True)
     os.makedirs(os.path.join(args.output_dir, 'batch_06'), exist_ok=True)
- 
+    
+    # -- setting
+    coco= COCO(os.path.join(args.input_dir, args.json_path))
+    get_single_ann_image(args.patch, os.path.join(args.data_dir, args.json_path), coco)
     
     batch_folders = os.listdir(segclass)
     for batch_folder in batch_folders:
@@ -172,13 +225,15 @@ def main(args):
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input_dir", default="../input/data/", type=str,
+    parser.add_argument("--input_dir", default="../../input/data/", type=str,
                         help="input annotated directory")
-    parser.add_argument("--output_dir", default="../input/data/", type=str,
+    parser.add_argument("--output_dir", default="../../input/data/", type=str,
                         help="output dataset directory")
     parser.add_argument("--lsj", default=True, type=bool, help="if use Large Scale Jittering")
     parser.add_argument("--lsj_min", default=0.2, type=float, help='recommend 0.2 ~ 0.4')
     parser.add_argument("--lsj_max", default=2, type=float, help='recommend 1.2 ~ 2')
+    parser.add_argument("--json_path", default='train.json', type=str, help='recommend train.json')
+    parser.add_argument("--patch", nargs="+", type=list, default=["Paper pack", "Battery", "Plastic"])
 
     return parser.parse_args()
 
