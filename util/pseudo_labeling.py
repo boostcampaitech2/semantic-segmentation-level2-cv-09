@@ -10,7 +10,7 @@ import scipy.ndimage
 if __name__ == "__main__":
     csv_file = "../mmsegmentation/work_dirs/upernet_swin_base_patch4_window12_512x512_160k_ade20k_pretrain_384x384_22K/submission_iter_48000-Copy1.csv"
     data_dir = "../input/data"
-    output_dir = "../input/data/mmseg/train"
+    output_dir = "../input/data/mmseg/pseudo"
     target_image_dir = os.path.join(output_dir, "image")
     target_mask_dir = os.path.join(output_dir, "mask")
 
@@ -19,7 +19,7 @@ if __name__ == "__main__":
     image_ids = submission["image_id"].values
     masks = submission["PredictionString"].values
 
-    idx = 3272
+    idx = 40000
     for image_id, mask in zip(image_ids, masks):
     
         # image load

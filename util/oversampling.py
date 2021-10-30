@@ -30,13 +30,14 @@ def apply_augmentation(image, mask):
         A.HorizontalFlip(p=0.5),
         A.VerticalFlip(p=0.5),
         A.ElasticTransform(p=0.5),
-        A.Resize(512, 512)
+        A.RandomCrop(384, 384, p=0.2),
+        A.Resize(512, 512),
     ])
     transformed = transforms(image=image, mask=mask)
 
     return transformed
 
-def set_seed(seed=42):
+def set_seed(seed=2234):
     random.seed(seed)
     np.random.seed(seed)
     os.environ["PYTHONHASHSEED"] = str(seed)
@@ -170,13 +171,13 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--patch", nargs="+", type=list, default=["Paper pack", "Battery", "Glass", "Metal"])
-    parser.add_argument("--background", nargs="+", type=list, default=["Battery", "Clothing", "General trash"])
+    parser.add_argument("--patch", nargs="+", type=list, default=["Paper pack", "General trash", "Battery", "Glass", "Plastic", "Clothing"])
+    parser.add_argument("--background", nargs="+", type=list, default=["Battery", "Paper", "Metal", "Plastic bag"])
     parser.add_argument("--num_output", type=int, default=500)
     parser.add_argument("--json_path", type=str, default="train_all.json")
     parser.add_argument("--output_json", type=str, default="oversampled_train.json")
     parser.add_argument("--merge_json", default=True, action='store_true')
-    parser.add_argument("--start_index", type=int, default=60000)
+    parser.add_argument("--start_index", type=int, default=50000)
 
     parser.add_argument("--image_dir", type=str, default="output/image")
     parser.add_argument("--mask_dir", type=str, default="output/mask")
