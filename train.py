@@ -25,6 +25,7 @@ if __name__ == '__main__':
     parser.add_argument('--save_every', default=True, action='store_true', help='save mode (default: True)')
     parser.add_argument('--val', default=True, action='store_true', help='using val set for validation (default: True)')
     parser.add_argument('--model_test', default=False, action='store_true', help='model test mode(True) (default: False)')
+    parser.add_argument('--experimenter', default='kjy', help='your name initial (default: kjy)')
     
     # Container environment
     parser.add_argument('--data_dir', type=str, default=os.environ.get('SM_CHANNEL_TRAIN', '/opt/ml/segmentation/input/data/'))
