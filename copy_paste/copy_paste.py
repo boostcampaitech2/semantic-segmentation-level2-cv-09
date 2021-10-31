@@ -57,7 +57,7 @@ def get_image_ann_id(coco:COCO, image:dict):
     return ann_ids, len(ann_ids)
 
 
-def get_single_ann_image(target_categories:list, path:str, coco_from:COCO):
+def get_target_image(target_categories:list, remove_target_categories:list, path:str, coco_from:COCO):
     """
         1. json file load
         2. json file load using coco library
@@ -67,6 +67,7 @@ def get_single_ann_image(target_categories:list, path:str, coco_from:COCO):
     for t_cat in target_categories:
         target.append(category[t_cat])
     print("target class:", target)
+    print("remove target class:", remove_target_categories)
 
     json_file = None
     with open(path, 'r') as f:
@@ -79,10 +80,10 @@ def get_single_ann_image(target_categories:list, path:str, coco_from:COCO):
         ids, length = get_image_ann_id(coco_from, image)
         if True : # length == 1:
             anns_info = coco_from.loadAnns(ids)
-            for ann in anns_info: # 한개라도 target annotation이 있으면 이미지 추가
-                if ann["category_id"] in target:
-                    single_obj_images.append(image['file_name'])
-                    break
+            ann_category = set([ann['category_id'] for ann in anns_info]) # target annotation이 있고, remove_target_categories가 없으면 이미지 추가
+            if len(ann_category & set(target)) != 0 and len(ann_category & set(remove_target_categories)) == 0:
+                single_obj_images.append(image['file_name'])
+                
 
     return single_obj_images
 
@@ -197,7 +198,7 @@ def main(args):
     
     # -- get target image path
     coco= COCO(os.path.join(args.input_dir, args.json_path))
-    target_path = get_single_ann_image(args.patch, os.path.join(args.output_dir, args.json_path), coco)
+    target_path = get_target_image(args.patch, args.remove_patch, os.path.join(args.output_dir, args.json_path), coco)
     image_count = 0
 
   
@@ -222,6 +223,8 @@ def main(args):
         cv2.imwrite(os.path.join(args.output_dir, 'batch_04', img_filename), img)
         image_count+=1
 
+        # if image_count > args.aug_num: break # 최대 개수 만족 시 종료
+
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -234,6 +237,8 @@ def get_args():
     parser.add_argument("--lsj_max", default=2, type=float, help='recommend 1.2 ~ 2')
     parser.add_argument("--json_path", default='train.json', type=str, help='recommend train.json')
     parser.add_argument("--patch", nargs="+", type=list, default=["Paper pack", "Battery", "Plastic", 'Clothing',"Glass" ])
+    parser.add_argument("--remove_patch", nargs="+", type=list, default=["Paper", "Plastic bag"])
+    parser.add_argument("--aug_num", nargs="+", type=int, default=1000)
 
     return parser.parse_args()
 
