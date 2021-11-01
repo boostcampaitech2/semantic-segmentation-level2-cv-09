@@ -10,6 +10,7 @@ from matplotlib.patches import Patch
 import webcolors
 import matplotlib.pyplot as plt
 import json
+from importlib import import_module
 
 def increment_path(path, exist_ok=False):
     """ Automatically increment path, i.e. runs/exp --> runs/exp0, runs/exp1 etc.
@@ -231,3 +232,16 @@ def plot_examples(model_path, model_name, mode, batch_id, num_examples, dataloae
             ax[row_num][1].legend(handles=legend_elements, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0)
             
         plt.show()
+
+
+def model_test(args):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    model_module = getattr(import_module("models"), args.model)
+    model = model_module(num_classes=11)
+
+    input = torch.randn([8, 3, 512, 512])
+    print("input shape:", input.shape)
+    output = model(input).to(device)
+    print("output shape: ", output.shape)
+    

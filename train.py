@@ -1,7 +1,7 @@
 import argparse
 import trainer
 import os
-
+import utils
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
@@ -34,7 +34,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print(args)
     if args.model_test:
-        trainer.model_test(args)
+        utils.model_test(args)
     else:
         trainer.train(args.data_dir, args.model_dir, args)
 
