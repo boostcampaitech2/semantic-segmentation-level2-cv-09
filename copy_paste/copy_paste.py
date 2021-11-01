@@ -66,8 +66,14 @@ def get_target_image(target_categories:list, remove_target_categories:list, path
     target = []
     for t_cat in target_categories:
         target.append(category[t_cat])
+    remove_target = []
+    for r_cat in remove_target_categories:
+        remove_target.append(category[r_cat])
+
     print("target class:", target)
-    print("remove target class:", remove_target_categories)
+    print("remove target class:", remove_target)
+
+    category_count = []
 
     json_file = None
     with open(path, 'r') as f:
@@ -81,9 +87,12 @@ def get_target_image(target_categories:list, remove_target_categories:list, path
         if True : # length == 1:
             anns_info = coco_from.loadAnns(ids)
             ann_category = set([ann['category_id'] for ann in anns_info]) # target annotation이 있고, remove_target_categories가 없으면 이미지 추가
-            if len(ann_category & set(target)) != 0 and len(ann_category & set(remove_target_categories)) == 0:
+            
+            if len(ann_category & set(target)) != 0 and len(ann_category & set(remove_target)) == 0:
                 single_obj_images.append(image['file_name'])
-                
+                category_count.extend(list(ann_category))
+    for key, value in category.items():
+        print(f'{key} : {category_count.count(value)}')
 
     return single_obj_images
 
@@ -203,6 +212,7 @@ def main(args):
 
   
     images_path = list(os.path.join(JPEGs, target) for target in target_path) # target: batch_04/0001.jpg
+    images_path = random.choices(images_path, k=args.aug_num)
     tbar = tqdm.tqdm(images_path, ncols=100)
     for image_path in tbar:
         # get source mask and img
@@ -223,7 +233,6 @@ def main(args):
         cv2.imwrite(os.path.join(args.output_dir, 'batch_04', img_filename), img)
         image_count+=1
 
-        # if image_count > args.aug_num: break # 최대 개수 만족 시 종료
 
 
 def get_args():

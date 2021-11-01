@@ -40,7 +40,7 @@ class BaseDataset(Dataset):
             anns = self.coco.loadAnns(ann_ids)
 
             masks = np.zeros((image_infos["height"], image_infos["width"])) # 비어있는 mask 생성
-            anns = sorted(anns, key=lambda idx : len(idx['segmentation'][0]), reverse=False) # 해당 이미지의 모든 annotation load
+            anns = sorted(anns, key=lambda idx : idx['area'], reverse=True) # 해당 이미지의 모든 annotation load
             for i in range(len(anns)):
                 class_name = self.get_class_name(anns[i]['category_id'], self.cats)
                 pixel_value = self.category_names.index(class_name)
