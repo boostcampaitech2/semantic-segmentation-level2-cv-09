@@ -104,7 +104,7 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
     # scheduler = CosineAnnealingLR(optimizer, T_max=30, eta_min=1e-3)
 
     # -- logging
-    wandb.init(project='trash_segmentation', entity='cv-09-segmentation', name = "_".join([args.experimenter, args.model, args.backbone, args.optimizer, str(args.epochs)])
+    wandb.init(project='trash_segmentation', entity='cv-09-segmentation', name = "_".join([args.experimenter, args.model, args.backbone, args.optimizer, str(args.epochs)]))
     wandb.config = args
     wandb.watch(model)
 
