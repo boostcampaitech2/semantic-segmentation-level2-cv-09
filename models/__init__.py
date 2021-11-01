@@ -9,3 +9,4 @@ from .UPPnet import *
 from .DeepLabV3Plus import *
 from .DeepLabV3Plus_ResNet50 import *
 from .DeepLabV3Plus_ResNet101 import *
+from .AlignedXception import *

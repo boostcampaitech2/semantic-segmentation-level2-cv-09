@@ -57,7 +57,7 @@ def get_image_ann_id(coco:COCO, image:dict):
     return ann_ids, len(ann_ids)
 
 
-def get_single_ann_image(target_categories:list, path:str, coco_from:COCO):
+def get_target_image(target_categories:list, remove_target_categories:list, path:str, coco_from:COCO):
     """
         1. json file load
         2. json file load using coco library
@@ -66,7 +66,14 @@ def get_single_ann_image(target_categories:list, path:str, coco_from:COCO):
     target = []
     for t_cat in target_categories:
         target.append(category[t_cat])
+    remove_target = []
+    for r_cat in remove_target_categories:
+        remove_target.append(category[r_cat])
+
     print("target class:", target)
+    print("remove target class:", remove_target)
+
+    category_count = []
 
     json_file = None
     with open(path, 'r') as f:
@@ -79,10 +86,13 @@ def get_single_ann_image(target_categories:list, path:str, coco_from:COCO):
         ids, length = get_image_ann_id(coco_from, image)
         if True : # length == 1:
             anns_info = coco_from.loadAnns(ids)
-            for ann in anns_info: # 한개라도 target annotation이 있으면 이미지 추가
-                if ann["category_id"] in target:
-                    single_obj_images.append(image['file_name'])
-                    break
+            ann_category = set([ann['category_id'] for ann in anns_info]) # target annotation이 있고, remove_target_categories가 없으면 이미지 추가
+            
+            if len(ann_category & set(target)) != 0 and len(ann_category & set(remove_target)) == 0:
+                single_obj_images.append(image['file_name'])
+                category_count.extend(list(ann_category))
+    for key, value in category.items():
+        print(f'{key} : {category_count.count(value)}')
 
     return single_obj_images
 
@@ -197,11 +207,12 @@ def main(args):
     
     # -- get target image path
     coco= COCO(os.path.join(args.input_dir, args.json_path))
-    target_path = get_single_ann_image(args.patch, os.path.join(args.output_dir, args.json_path), coco)
+    target_path = get_target_image(args.patch, args.remove_patch, os.path.join(args.output_dir, args.json_path), coco)
     image_count = 0
 
   
     images_path = list(os.path.join(JPEGs, target) for target in target_path) # target: batch_04/0001.jpg
+    images_path = random.choices(images_path, k=args.aug_num)
     tbar = tqdm.tqdm(images_path, ncols=100)
     for image_path in tbar:
         # get source mask and img
@@ -223,6 +234,7 @@ def main(args):
         image_count+=1
 
 
+
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_dir", default="../../input/data/", type=str,
@@ -234,6 +246,8 @@ def get_args():
     parser.add_argument("--lsj_max", default=2, type=float, help='recommend 1.2 ~ 2')
     parser.add_argument("--json_path", default='train.json', type=str, help='recommend train.json')
     parser.add_argument("--patch", nargs="+", type=list, default=["Paper pack", "Battery", "Plastic", 'Clothing',"Glass" ])
+    parser.add_argument("--remove_patch", nargs="+", type=list, default=["Paper", "Plastic bag"])
+    parser.add_argument("--aug_num", nargs="+", type=int, default=1000)
 
     return parser.parse_args()
 
