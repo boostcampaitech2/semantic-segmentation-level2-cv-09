@@ -13,6 +13,8 @@ import random
 import torch
 from pycocotools.coco import COCO
 import json
+import albumentations as A
+
 
 category = {
     "Background": 0,
@@ -52,6 +54,49 @@ def random_flip_horizontal(mask, img, p=0.5):
     return mask, img
 
 
+def transform(mask, img):
+
+    tfms_to_small = A.Compose([
+        A.Resize(256, 256),
+        A.PadIfNeeded(512, 512, border_mode=0),
+        A.RandomRotate90(p=1.0),
+        A.HorizontalFlip(p=1.0),
+        A.VerticalFlip(p=0.5),
+        A.Resize(512, 512)
+    ])
+
+    tfms_to_big = A.Compose([
+        A.CropNonEmptyMaskIfExists(256, 256, ignore_values=[0]),
+        A.RandomRotate90(p=1.0),
+        A.HorizontalFlip(p=1.0),
+        A.VerticalFlip(p=0.5),
+        A.RandomRotate90(p=1.0),
+        A.Resize(512, 512)
+    ])
+
+    tfms = A.Compose([
+        A.RandomRotate90(p=1.0),
+        A.HorizontalFlip(p=1.0),
+        A.VerticalFlip(p=0.5),
+        A.Resize(512, 512)
+    ])
+
+    area = np.sum(mask[mask!=0] != 0)
+    if  area > 20000:
+        transformed = tfms_to_small(image=img, mask=mask)
+        mask = transformed['mask']
+        img = transformed['image']
+    elif area < 5000:
+        transformed = tfms_to_big(image=img, mask=mask)
+        mask = transformed['mask']
+        img = transformed['image']  
+    else:
+        transformed = tfms(image=img, mask=mask)
+        mask = transformed['mask']
+        img = transformed['image']
+
+    return mask, img
+
 def get_image_ann_id(coco:COCO, image:dict):
     ann_ids = coco.getAnnIds(imgIds=image['id'])
     return ann_ids, len(ann_ids)
@@ -84,13 +129,13 @@ def get_target_image(target_categories:list, remove_target_categories:list, path
     single_obj_images = []
     for image in images:
         ids, length = get_image_ann_id(coco_from, image)
-        if True : # length == 1:
-            anns_info = coco_from.loadAnns(ids)
-            ann_category = set([ann['category_id'] for ann in anns_info]) # target annotation이 있고, remove_target_categories가 없으면 이미지 추가
-            
-            if len(ann_category & set(target)) != 0 and len(ann_category & set(remove_target)) == 0:
-                single_obj_images.append(image['file_name'])
-                category_count.extend(list(ann_category))
+        anns_info = coco_from.loadAnns(ids)
+        ann_category = set([ann['category_id'] for ann in anns_info]) # target annotation이 있고, remove_target_categories가 없으면 이미지 추가
+        
+        if len(ann_category & set(target)) != 0 and len(ann_category & set(remove_target)) == 0:
+            single_obj_images.append([image['file_name'], ids])
+            category_count.extend(list(ann_category))
+
     for key, value in category.items():
         print(f'{key} : {category_count.count(value)}')
 
@@ -171,23 +216,38 @@ def Large_Scale_Jittering(mask, img, min_scale=0.2, max_scale=2):
 
 
 def copy_paste(mask_src, img_src, mask_main, img_main):
-    mask_src, img_src = random_flip_horizontal(mask_src, img_src)
+
+    mask_src, img_src = transform(mask_src, img_src)
     mask_main, img_main = random_flip_horizontal(mask_main, img_main)
+    
 
     # LSJ， Large_Scale_Jittering
-    if args.lsj:
-        mask_src, img_src = Large_Scale_Jittering(mask_src, img_src, args.lsj_min, args.lsj_max)
-        mask_main, img_main = Large_Scale_Jittering(mask_main, img_main, args.lsj_min, args.lsj_max)
-    else:
-        # rescale mask_src/img_src to less than mask_main/img_main's size
-        h, w, _ = img_main.shape
-        mask_src, img_src = rescale_src(mask_src, img_src, h, w)
+    # if args.lsj:
+    #     mask_src, img_src = Large_Scale_Jittering(mask_src, img_src, args.lsj_min, args.lsj_max)
+    #     mask_main, img_main = Large_Scale_Jittering(mask_main, img_main, args.lsj_min, args.lsj_max)
+    # else:
+    #     # rescale mask_src/img_src to less than mask_main/img_main's size
+    #     h, w, _ = img_main.shape
+    #     mask_src, img_src = rescale_src(mask_src, img_src, h, w)
 
     img = img_add(img_src, img_main, mask_src)
     mask = img_add(mask_src, mask_main, mask_src)
 
     return mask, img
 
+
+def extract_patch(mask, coco:COCO, ids):
+    '''
+    패치들만 추출하는 함수입니다.
+    '''
+
+    anns_info = coco.loadAnns(ids)
+    anns = [ann for ann in anns_info if ann['category_id'] in args.patch] 
+    for i in range(len(anns)):
+        mask[coco.annToMask(anns[i]) == 0] = 0 # patch에 없는 것들은 삭제
+    mask = mask.astype(np.uint8)
+
+    return mask
 
 def main(args):
     # fix seed
@@ -209,18 +269,22 @@ def main(args):
     coco= COCO(os.path.join(args.input_dir, args.json_path))
     target_path = get_target_image(args.patch, args.remove_patch, os.path.join(args.output_dir, args.json_path), coco)
     image_count = 0
+    images_path = []
 
-  
-    images_path = list(os.path.join(JPEGs, target) for target in target_path) # target: batch_04/0001.jpg
+    for target, ids in target_path:
+        images_path.append([os.path.join(JPEGs, target), ids])# target: batch_04/0001.jpg
     images_path = random.choices(images_path, k=args.aug_num)
     tbar = tqdm.tqdm(images_path, ncols=100)
     for image_path in tbar:
         # get source mask and img
-        mask_src = np.asarray(Image.open(image_path.replace('.jpg', '.png').replace('JPEGImages', 'SegmentationClass')), dtype=np.uint8)
-        img_src = cv2.imread(image_path)
+ 
+        mask_src = np.asarray(Image.open(image_path[0].replace('.jpg', '.png').replace('JPEGImages', 'SegmentationClass')), dtype=np.uint8)
+        if args.extract_patch:
+            mask_src = extract_patch(mask_src, coco, image_path[1])
+        img_src = cv2.imread(image_path[0])
 
         # random choice main mask/img
-        mask_main_path = np.random.choice(images_path)
+        mask_main_path = random.choices(images_path, k=1)[0][0]
         mask_main = np.asarray(Image.open(mask_main_path.replace('.jpg', '.png').replace('JPEGImages', 'SegmentationClass')), dtype=np.uint8)
         img_main = cv2.imread(os.path.join(mask_main_path))
 
@@ -241,14 +305,14 @@ def get_args():
                         help="input annotated directory")
     parser.add_argument("--output_dir", default="../../input/data/", type=str,
                         help="output dataset directory")
-    parser.add_argument("--lsj", default=True, type=bool, help="if use Large Scale Jittering")
+    parser.add_argument("--lsj", default=False, type=bool, help="if use Large Scale Jittering")
     parser.add_argument("--lsj_min", default=0.2, type=float, help='recommend 0.2 ~ 0.4')
     parser.add_argument("--lsj_max", default=2, type=float, help='recommend 1.2 ~ 2')
     parser.add_argument("--json_path", default='train.json', type=str, help='recommend train.json')
-    parser.add_argument("--patch", nargs="+", type=list, default=["Paper pack", "Battery", "Plastic", 'Clothing',"Glass" ])
+    parser.add_argument("--patch", nargs="+", type=list, default=["Paper pack", "Battery", 'Clothing',"Glass" ])
     parser.add_argument("--remove_patch", nargs="+", type=list, default=["Paper", "Plastic bag"])
-    parser.add_argument("--aug_num", nargs="+", type=int, default=1000)
-
+    parser.add_argument("--aug_num", nargs="+", type=int, default=1500)
+    parser.add_argument("--extract_patch", type=bool, default=True)
     return parser.parse_args()
 
 

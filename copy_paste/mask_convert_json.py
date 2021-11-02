@@ -101,7 +101,7 @@ def get_args():
     parser = argparse.ArgumentParser()
     
     # Hyperparmeter
-    parser.add_argument('--main_json', type=str, default='train_all.json', help='set main json file to add with copy_paste json file (default: train_all.json)')
+    parser.add_argument('--main_json', type=str, default='train.json', help='set main json file to add with copy_paste json file (default: train_all.json)')
     parser.add_argument('--mode', type=str, default='add', help='Yon can choose add or self (default : add)')
 
     args = parser.parse_args()
