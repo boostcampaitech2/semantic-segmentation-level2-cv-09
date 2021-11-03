@@ -29,7 +29,7 @@
 
 ## 🎉 수행결과 best score?
 
-### ✨ 리더보드(대회 진행): **10위** mIoU : 0.751
+### ✨ 리더보드(대회 진행): **11위** mIoU : 0.751
 
 ### 🎊 리더보드(최종):
 
@@ -44,6 +44,18 @@
 - PyTorch >= 1.7.1
 - conda >= 4.9.2
 - tensorboard >= 2.4.1
+
+## Example
+- python train.py \
+--model UPlusPlus_Efficient_b5 \
+--epochs 200 \
+--loss FocalLoss \
+--val_json kfold_0_val.json \
+--train_json kfold_0_train.json \
+--train_augmentation CustomTrainAugmentation \
+--batch_size 5
+- python test.py --model_dir ../../mmsegmentation/work_dirs/upernet_swin_tiny_patch4_window7_512x512_160k_ade20k_pretrain_224x224_1K \
+--model_name iter_160000-Copy1.pth
 
 ### ⌨ Hardware
 
