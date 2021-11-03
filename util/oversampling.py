@@ -28,7 +28,7 @@ category = {
 def apply_augmentation(image, mask):
     transforms = A.Compose([
         A.HorizontalFlip(p=0.5),
-        A.VerticalFlip(p=0.5),
+        # A.VerticalFlip(p=0.5),
         A.ElasticTransform(p=0.5),
         A.Resize(512, 512)
     ])
@@ -208,7 +208,7 @@ if __name__ == "__main__":
 
     # parser.add_argument("--patch", nargs="+", type=list, default=["Battery"])
     parser.add_argument("--patch", type=str, default="Battery")
-    parser.add_argument("--background", nargs="+", type=list, default=["Paper pack", "Clothing"])
+    parser.add_argument("--background", nargs="+", type=list, default=["Paper pack", "Clothing", "Glass", "Metal"])
     parser.add_argument("--num_output", type=int, default=500)
     parser.add_argument("--json_path", type=str, default="train_all.json")
     parser.add_argument("--output_json", type=str, default="oversampled_train.json")

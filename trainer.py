@@ -222,14 +222,3 @@ def train(data_dir, model_dir, args): # data_dir, model_dir, args
             else:
                 utils.save_model(model, save_dir, f"last.pth")
 
-def model_test(args):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    model_module = getattr(import_module("models"), args.model)
-    model = model_module(num_classes=11)
-
-    input = torch.randn([8, 3, 512, 512])
-    print("input shape:", input.shape)
-    output = model(input).to(device)
-    print("output shape: ", output.shape)
-    
