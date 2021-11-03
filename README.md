@@ -103,7 +103,29 @@ python test.py python test.py --model_dir model/exp --model_name epoch10.pth --a
 ## 📂 Archive contents
 
 ```
-TODO
+baseline/
+├── train.py # main
+├── trainer.py
+├── dataset.py
+├── test.py
+├── utils.py
+└── models/ # train model package
+└── loss/ # loss metric package
+└── scheduler/ # scheduler package
+└── model
+  └── exp1/ # model file will save here
+```
+
+```
+util/
+├── oversampling.py
+└── pseudo_labeling.py
+```
+
+```
+copy_paste/
+├── oversampling.py
+└── pseudo_labeling.py
 ```
 
 ---
