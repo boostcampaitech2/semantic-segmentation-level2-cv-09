@@ -46,7 +46,8 @@
 - tensorboard >= 2.4.1
 
 ## Example
-- python train.py \
+```
+python train.py \
 --model UPlusPlus_Efficient_b5 \
 --epochs 200 \
 --loss FocalLoss \
@@ -54,8 +55,11 @@
 --train_json kfold_0_train.json \
 --train_augmentation CustomTrainAugmentation \
 --batch_size 5
-- python test.py python test.py --model_dir model/exp --model_name epoch10.pth --augmentation TestAugmentation
-
+```
+```
+python test.py python test.py --model_dir model/exp --model_name epoch10.pth --augmentation TestAugmentation
+```
+- reference here `exmple/`
 ### ⌨ Hardware
 
 - CPU: Intel(R) Xeon(R) Gold 5220 CPU @ 2.20GHz
