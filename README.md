@@ -55,6 +55,7 @@
 
 - [MMsegmentation](https://github.com/open-mmlab/mmsegmentation)
 - [RAdam](https://github.com/LiyuanLucasLiu/RAdam/blob/master/radam/radam.py)
+- [Copy-Paste](https://arxiv.org/pdf/2012.07177v1.pdf)
   <br>
   
 ## 📏 역할
