@@ -73,25 +73,41 @@
 
 ---
 
-## 1. EDA
+## 🔑 Validation Dataset 구성
+- Segmentation task에서 데이터를 reasonable하게 train/val dataset을 나누기 위함
+- 아래와 같이 각 이미지마다 3가지 label을 정의 후 Multi-label Stratified K-Fold로 데이터를 나눔
+```
+ 수가 적은 Class를 최대한 포함하기 위해 이미지마다 가장 적은 수에 해당하는 클래스를 이미지의 클래스로 정의
+ 이미지당 Class의 수
+ 이미지당 Annotation의 수
+````
+ ![image](https://user-images.githubusercontent.com/35412566/140275405-f42a0fd4-37ae-41be-986f-39ee5a6847c9.png)
+
 
 <br>
 
 ---
 
-## 2. 검증 전략, cv 전략
+## 🔑 Oversampling
+![image](https://user-images.githubusercontent.com/35412566/140275754-58e33ecd-8e5b-4581-8655-6f153ed11412.png)
+<br>
+
+![image](https://user-images.githubusercontent.com/35412566/140275802-3f83cd8e-9854-422d-86b3-c58c2051af5a.png)
 
 <br>
 
 ---
 
-## 3. 아키텍쳐
+## 🔑 Pseudo Labeling
+- 가장 성능이 좋은 모델의 inference 결과로 학습 데이터를 만들고 재학습
+- Segmentation task 특성으로 점수 크게 향상(0.727 -> 0.75
 
 <br>
 
 ---
-
-### 4. copy & :
+## 🔑 DenseCRF
+- Dense CRF 기법을 적용해 boundary 좀 더 뚜렷하게 반영, 단일 객체에서 성능 향상 기대
+![image](https://user-images.githubusercontent.com/35412566/140275995-7967b185-5dd8-4e74-b36c-0558408a436c.png)
 
 <br>
 
