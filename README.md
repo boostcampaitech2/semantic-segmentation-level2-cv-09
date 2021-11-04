@@ -148,7 +148,7 @@ copy_paste/
 
 <br>
 
-## Copy Paste
+## 💎Copy Paste
 
 <br>
 
@@ -160,7 +160,7 @@ copy_paste/
 5. Small patch to Large patch
 6. Random Flip
 
-### 💎Copy_paste Quick Start 
+### Copy_paste Quick Start 
 
 ### 1. 쉘 스크립트를 사용하고자 한다면 해당 디렉토리에 들어가 다음 명령어를 입력한다.
 ```
