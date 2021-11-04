@@ -198,6 +198,8 @@ python copy_paste.py --input_dir ../../input/data/ --output_dir ../../input/data
 --extract_patch True
 ```
 
+![image](https://user-images.githubusercontent.com/63527907/139034387-1ec9d9c8-3dcd-4859-9f8a-5ead0fe54f40.png)
+
 <br>
 
 #### 4. mask로부터 json파일로 변환
@@ -207,9 +209,9 @@ python mask_coco_mask.py
 --mode add
 ```
 
-- 결과)
+#### 5. 결과
 
-![image](https://user-images.githubusercontent.com/63527907/139034387-1ec9d9c8-3dcd-4859-9f8a-5ead0fe54f40.png)
+![image](https://user-images.githubusercontent.com/63527907/139034173-370fd30e-42dc-40c3-afe1-00ed559fbb2a.png)
 ---
 
 ## 🛒 Train Test Quickstart
