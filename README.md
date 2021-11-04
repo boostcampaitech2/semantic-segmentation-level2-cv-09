@@ -45,21 +45,6 @@
 - conda >= 4.9.2
 - tensorboard >= 2.4.1
 
-## Example
-```
-python train.py \
---model UPlusPlus_Efficient_b5 \
---epochs 200 \
---loss FocalLoss \
---val_json kfold_0_val.json \
---train_json kfold_0_train.json \
---train_augmentation CustomTrainAugmentation \
---batch_size 5
-```
-```
-python test.py python test.py --model_dir model/exp --model_name epoch10.pth --augmentation TestAugmentation
-```
-- reference here `exmple/`
 ### ⌨ Hardware
 
 - CPU: Intel(R) Xeon(R) Gold 5220 CPU @ 2.20GHz
@@ -71,6 +56,18 @@ python test.py python test.py --model_dir model/exp --model_name epoch10.pth --a
 - [MMsegmentation](https://github.com/open-mmlab/mmsegmentation)
 - [RAdam](https://github.com/LiyuanLucasLiu/RAdam/blob/master/radam/radam.py)
   <br>
+  
+## 📏 역할
+| 팀구성  | 역할 |
+| :---:   | :---:|
+| 공은찬_T2009| Custom loss, Optimizer 적용|
+| 곽민구_T2255| Optimizer, Loss, Scheduler Test 진행 |
+| 김준섭_T2056| Segmentation Multi-label Stratified K-fold 구성|
+| 김진용_T2063| Copy paste 데이터 셋 제작|
+| 심용철_T2122| Model 탐색, Resize 및 weighted loss 실효성 검증|
+| 오재석_T2133| Stratified K-fold 데이터셋 코드 틀 작성|
+| 최현진_T2234| Baseline Code 작성, Pseudo Labeling, Oversampling|
+
 
 # 🔨 수행 과정
 
@@ -131,3 +128,17 @@ copy_paste/
 ---
 
 ## 🛒 Quickstart
+```
+python train.py \
+--model UPlusPlus_Efficient_b5 \
+--epochs 200 \
+--loss FocalLoss \
+--val_json kfold_0_val.json \
+--train_json kfold_0_train.json \
+--train_augmentation CustomTrainAugmentation \
+--batch_size 5
+```
+```
+python test.py python test.py --model_dir model/exp --model_name epoch10.pth --augmentation TestAugmentation
+```
+- reference here `exmple/`
