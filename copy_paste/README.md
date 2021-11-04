@@ -10,6 +10,9 @@
 1. Random Horizontal Flip
 2. Large Scale Jittering
 3. Copy-Paste
+4. Large patch to Small patch
+5. Small patch to Large patch
+6. Random Flip
 
 
 # Content
@@ -48,22 +51,31 @@ pip install -r requirements.txt
 
 ## 2. 원본 이미지와 json 파일을 통해 segmentation mask 생성
 ```
-python get_coco_mask.py  --input_dir ../../input/data/ --split train_all
+python get_coco_mask.py  
+--input_dir ../../input/data/ 
+--split train_all
 ```
 
 
 ## 3. 원본 이미지, 원본 mask, 랜덤 이미지, 랜덤 mask로부터 copy_paste
 ```
 python copy_paste.py --input_dir ../../input/data/ --output_dir ../../input/data/ 
-
 --patch ["Paper pack", "Battery", "Plastic", 'Clothing',"Glass" ]
-
+--remove_patch ["Paper", "Plastic bag"]
 --json_path train.json
-
 --lsj True
+--lsj_max 2
+--lsj_min 0.2
+--aug_num 1500
+--extract_patch True
 ```
 
-
+## 4. mask로부터 json파일로 변환
+```
+python mask_coco_mask.py
+--main_json train.json
+--mode add
+```
 
 - 결과)
 

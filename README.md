@@ -138,13 +138,81 @@ util/
 
 ```
 copy_paste/
-├── oversampling.py
-└── pseudo_labeling.py
+├─ check_copy_paste.ipynb
+├─ copy_paste.py
+├─ mask_convert_json.py
+├─ get_coco_mask.py
+├─ README.md
+└─ requirements.txt
 ```
 
+<br>
+
+## Copy Paste
+
+<br>
+
+### Augmentation Method used in this repo:
+1. Random Horizontal Flip
+2. Large Scale Jittering
+3. Copy-Paste
+4. Large patch to Small patch
+5. Small patch to Large patch
+6. Random Flip
+
+### Copy_paste Quick Start 
+
+### 1. 쉘 스크립트를 사용하고자 한다면 해당 디렉토리에 들어가 다음 명령어를 입력한다.
+```
+./copy_paste.sh
+```
+<br>
+
+### 2. 명령어를 따로 입력하고자 한다면 다음과 같은 순서로 명령어를 입력한다.
+#### 1. 모듈 설치하기
+```
+pip install -r requirements.txt
+```
+
+<br>
+
+#### 2. 원본 이미지와 json 파일을 통해 segmentation mask 생성
+```
+python get_coco_mask.py  
+--input_dir ../../input/data/ 
+--split train_all
+```
+
+<br>
+
+#### 3. 원본 이미지, 원본 mask, 랜덤 이미지, 랜덤 mask로부터 copy_paste
+```
+python copy_paste.py --input_dir ../../input/data/ --output_dir ../../input/data/ 
+--patch ["Paper pack", "Battery", "Plastic", 'Clothing',"Glass" ]
+--remove_patch ["Paper", "Plastic bag"]
+--json_path train.json
+--lsj True
+--lsj_max 2
+--lsj_min 0.2
+--aug_num 1500
+--extract_patch True
+```
+
+<br>
+
+#### 4. mask로부터 json파일로 변환
+```
+python mask_coco_mask.py
+--main_json train.json
+--mode add
+```
+
+- 결과)
+
+![image](https://user-images.githubusercontent.com/63527907/139034387-1ec9d9c8-3dcd-4859-9f8a-5ead0fe54f40.png)
 ---
 
-## 🛒 Quickstart
+## 🛒 Train Test Quickstart
 ```
 python train.py \
 --model UPlusPlus_Efficient_b5 \
