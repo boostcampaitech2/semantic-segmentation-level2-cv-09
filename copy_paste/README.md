@@ -6,7 +6,7 @@
 - main 원본 이미지와 source 원본 이미지가 필요합니다. coco json 파일에서 각 이미지에 대한 segmentation 정보를 추출하여 마스크를 생성합니다. 아래 소개된 어그멘테이션 기법을 적용한 후 source 마스크를 잘라내어, 원본 이미지에 붙이는 방식으로 진행됩니다.
 
 
-# Augmentation Method used in this repo:
+# Augmentation Method:
 1. Random Horizontal Flip
 2. Large Scale Jittering
 3. Copy-Paste
@@ -38,7 +38,7 @@ segmentation
 
 1. 쉘 스크립트를 사용하고자 한다면 해당 디렉토리에 들어가 다음 명령어를 입력한다.
 ```
-./copy_paste.sh
+./aug.sh
 ```
 
 

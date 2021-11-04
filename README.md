@@ -152,7 +152,7 @@ copy_paste/
 
 <br>
 
-### Augmentation Method used in this repo:
+### Augmentation Method:
 1. Random Horizontal Flip
 2. Large Scale Jittering
 3. Copy-Paste
@@ -160,11 +160,11 @@ copy_paste/
 5. Small patch to Large patch
 6. Random Flip
 
-### Copy_paste Quick Start 
+### 💎Copy_paste Quick Start 
 
 ### 1. 쉘 스크립트를 사용하고자 한다면 해당 디렉토리에 들어가 다음 명령어를 입력한다.
 ```
-./copy_paste.sh
+./aug.sh
 ```
 <br>
 
